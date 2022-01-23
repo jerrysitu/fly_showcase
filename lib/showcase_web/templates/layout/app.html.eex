@@ -1,0 +1,5 @@
+<main role="main" class="px-2">
+  <p class="text-xs alert alert-info lg:text-base" role="alert"><%= get_flash(@conn, :info) %></p>
+  <p class="text-xs alert alert-danger lg:text-base" role="alert"><%= get_flash(@conn, :error) %></p>
+  <%= @inner_content %>
+</main>
