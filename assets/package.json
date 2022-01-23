@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "deploy": "NODE_ENV=prod tailwindcss --postcss --input=css/app.css --output=../priv/static/assets/app.css --minify"
+    "deploy": "NODE_ENV=production postcss css/app.css -o ../priv/static/assets/app.css"
   },
   "devDependencies": {
     "tailwindcss-neumorphism": "^0.1.0",
