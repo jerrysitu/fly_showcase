@@ -10,17 +10,12 @@ use Mix.Config
 # which you should run after static files are built and
 # before starting your production server.
 config :showcase, ShowcaseWeb.Endpoint,
-  url: [
-    scheme: "https",
-    host: System.get_env("ORIGIN_HOSTNAME") || "localhost",
-    port: 80
+  url: [host: "jerrysitu.com", port: 80],
+  cache_static_manifest: "priv/static/cache_manifest.json",
+  force_ssl: [
+    host: nil,
+    rewrite_on: [:x_forwarded_port, :x_forwarded_proto]
   ],
-  # server: true,
-  # force_ssl: [rewrite_on: [:x_forwarded_proto]],
-  # check_origin: [
-  #   "https://#{System.get_env("RENDER_EXTERNAL_HOSTNAME", "")}",
-  #   "https://jerrysitu.com"
-  # ],
   cache_static_manifest: "priv/static/cache_manifest.json"
 
 # Do not print debug messages in production
