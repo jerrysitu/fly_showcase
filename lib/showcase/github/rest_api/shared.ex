@@ -1,9 +1,9 @@
 defmodule Showcase.Github.Api.Shared do
   use Tesla
-  @access_token System.get_env("GITHUB_ACCESS_TOKEN", "")
+  # @access_token Application.get_env(:showcase, :github_access_token)
 
   def get_response(uri) do
-    case Tesla.get(client(@access_token), uri) do
+    case Tesla.get(client(Application.get_env(:showcase, :github_access_token)), uri) do
       {:ok, %Tesla.Env{status: 200} = response} ->
         {:ok,
          %{

@@ -26,5 +26,8 @@ if config_env() == :prod do
     ],
     secret_key_base: secret_key_base
 
+  config :showcase,
+    github_access_token: System.get_env("GITHUB_ACCESS_TOKEN", "")
+
   config :showcase, ShowcaseWeb.Endpoint, server: true
 end

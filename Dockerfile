@@ -10,10 +10,12 @@
 #   - https://hub.docker.com/r/hexpm/elixir/tags - for the build image
 #   - https://hub.docker.com/_/debian?tab=tags&page=1&name=bullseye-20210902-slim - for the release image
 #   - https://pkgs.org/ - resource for finding needed packages
-#   - Ex: hexpm/elixir:1.12.2-erlang-23.3.4-debian-bullseye-20210902-slim
-#
-ARG BUILDER_IMAGE="hexpm/elixir:1.12.2-erlang-23.3.4-debian-bullseye-20210902-slim"
-ARG RUNNER_IMAGE="debian:bullseye-20210902-slim"
+#   - Ex: hexpm/elixir:1.14.1-erlang-23.3.4.18-debian-bullseye-20220801-slim
+#   - Elixir Images: https://hub.docker.com/r/hexpm/elixir/tags?page=1
+
+ARG BUILDER_IMAGE="hexpm/elixir:1.14.1-erlang-23.3.4.18-debian-bullseye-20220801-slim"
+ARG RUNNER_IMAGE="debian:bullseye-20220801-slim"
+
 
 FROM ${BUILDER_IMAGE} as builder
 

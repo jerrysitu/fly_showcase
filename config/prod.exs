@@ -15,8 +15,7 @@ config :showcase, ShowcaseWeb.Endpoint,
   force_ssl: [
     host: nil,
     rewrite_on: [:x_forwarded_port, :x_forwarded_proto]
-  ],
-  cache_static_manifest: "priv/static/cache_manifest.json"
+  ]
 
 # Do not print debug messages in production
 config :logger, level: :info

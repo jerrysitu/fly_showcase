@@ -58,6 +58,9 @@ config :showcase, ShowcaseWeb.Endpoint,
     ]
   ]
 
+config :showcase,
+  github_access_token: System.get_env("GITHUB_ACCESS_TOKEN", "")
+
 # Do not include metadata nor timestamps in development logs
 config :logger, :console, format: "[$level] $message\n"
 

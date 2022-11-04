@@ -1,6 +1,6 @@
 defmodule Showcase.GraphQLAPI.Shared do
   use Tesla
-  @access_token System.get_env("GITHUB_ACCESS_TOKEN", "")
+  # @access_token Application.get_env(:showcase, :github_access_token)
 
   def get_user_by({attribute, value}, position \\ nil, cursor \\ nil) do
     with {:ok, attribute} <- maybe_tranform_to_string(attribute),
@@ -42,7 +42,7 @@ defmodule Showcase.GraphQLAPI.Shared do
         }
         |> Jason.encode!()
 
-      case Tesla.post(client(@access_token), "", body) do
+      case Tesla.post(client(Application.get_env(:showcase, :github_access_token)), "", body) do
         {:ok, %Tesla.Env{status: 200} = response} ->
           {:ok, response}
 
