@@ -39,7 +39,7 @@ defmodule ShowcaseWeb.PokerLive do
     pid =
       case GenServer.whereis(room_atom) do
         nil ->
-          {:ok, pid} = Showcase.Poker.start_link(room_atom)
+          {:ok, pid} = Showcase.PokerRoomState.start_link(room_atom)
           pid
 
         pid ->
@@ -48,15 +48,12 @@ defmodule ShowcaseWeb.PokerLive do
 
     participants =
       Presence.list(room)
-      |> Enum.map(fn {_k, v} ->
-        v[:metas] |> List.first()
-      end)
-      |> Enum.sort_by(& &1.username, :asc)
+      |> get_presence_participants()
 
     reveal =
       case length(participants) do
         0 -> false
-        _ -> Showcase.Poker.get_reveal(pid)
+        _ -> Showcase.PokerRoomState.get_reveal(pid)
       end
 
     {:noreply,
@@ -98,7 +95,7 @@ defmodule ShowcaseWeb.PokerLive do
   def handle_event("clear-points", _, socket) do
     %{assigns: %{room: room, pid: pid}} = socket
 
-    Showcase.Poker.hide(pid)
+    Showcase.PokerRoomState.hide(pid)
 
     Phoenix.PubSub.broadcast(
       Showcase.PubSub,
@@ -110,7 +107,7 @@ defmodule ShowcaseWeb.PokerLive do
   end
 
   def handle_event("show-votes", _, %{assigns: %{pid: pid, room: room}} = socket) do
-    Showcase.Poker.show(pid)
+    Showcase.PokerRoomState.show(pid)
 
     Phoenix.PubSub.broadcast(
       Showcase.PubSub,
@@ -180,7 +177,7 @@ defmodule ShowcaseWeb.PokerLive do
     do: {:noreply, socket}
 
   def handle_info({__MODULE__, :reveal_changed, _payload}, %{assigns: %{pid: pid}} = socket) do
-    reveal = Showcase.Poker.get_reveal(pid)
+    reveal = Showcase.PokerRoomState.get_reveal(pid)
 
     {:noreply, socket |> assign(reveal: reveal)}
   end
@@ -203,7 +200,7 @@ defmodule ShowcaseWeb.PokerLive do
       }
     )
 
-    reveal = Showcase.Poker.get_reveal(pid)
+    reveal = Showcase.PokerRoomState.get_reveal(pid)
 
     participants =
       participants
@@ -217,10 +214,7 @@ defmodule ShowcaseWeb.PokerLive do
   def handle_info(%{event: "presence_diff", topic: _msg_room}, %{assigns: %{room: room}} = socket) do
     participants =
       Presence.list(room)
-      |> Enum.map(fn {_k, v} ->
-        v[:metas] |> List.first()
-      end)
-      |> Enum.sort_by(& &1.username, :asc)
+      |> get_presence_participants()
 
     {
       :noreply,
@@ -231,4 +225,35 @@ defmodule ShowcaseWeb.PokerLive do
 
   defp maybe_trunc(0.5), do: 0.5
   defp maybe_trunc(float), do: float |> trunc()
+
+  def get_presence_participants(presences) do
+    presences
+    |> Enum.map(fn {_k, v} ->
+      v[:metas] |> List.first()
+    end)
+    |> Enum.sort_by(& &1.username, :asc)
+  end
+
+  defp render_points(
+         %{points: points, user_socket_id: user_socket_id, socket_id: socket_id} = assigns
+       )
+       when user_socket_id == socket_id do
+    ~H"""
+    <td class="px-3 py-4 text-sm text-right text-gray-500 whitespace-nowrap"><%= points %></td>
+    """
+  end
+
+  defp render_points(%{reveal: true, points: points} = assigns) do
+    ~H"""
+    <td class="px-3 py-4 text-sm text-right text-gray-500 whitespace-nowrap"><%= points %></td>
+    """
+  end
+
+  defp render_points(%{reveal: false} = assigns) do
+    ~H"""
+    <td class="px-3 py-4 text-right w-min">
+      <div class="inline-block text-gray-600 bg-gray-600 rounded-lg">00</div>
+    </td>
+    """
+  end
 end

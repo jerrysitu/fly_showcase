@@ -1,4 +1,4 @@
-defmodule Showcase.Poker do
+defmodule Showcase.PokerRoomState do
   use GenServer
 
   def start_link(room) do
