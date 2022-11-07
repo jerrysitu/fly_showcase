@@ -1,7 +1,10 @@
 <div class="max-w-2xl px-2 mx-auto">
   <div class="text-2xl font-semibold text-center lg:text-4xl">Planning Poker</div>
 
-  <div class={"#{if @username == "", do: "block", else: "hidden"} mt-6 bg-white shadow sm:rounded-lg"}>
+  <div class="">Reveal: <%= @reveal %></div>
+  <div class="">Joined: <%= @joined %></div>
+
+  <div class={"#{unless @joined, do: "block", else: "hidden"} mt-6 bg-white shadow sm:rounded-lg"}>
     <div class="px-4 py-5 sm:p-6">
       <h3 class="text-lg font-medium leading-6 text-gray-900">Join Session</h3>
       <div class="max-w-xl mt-2 text-sm text-gray-500">
@@ -18,8 +21,8 @@
   </div>
 
 
-  <div class="mt-6 rounded-lg">
-    <div class={"#{unless @username == "", do: "block", else: "hidden"} mt-4"}>
+  <div class="mt-6">
+    <div class={"#{if @joined and @reveal != true, do: "block", else: "hidden"} mt-4"}>
       <div class="flex gap-x-2">
         <%= for {key, value} <- @possible_points do %>
           <span phx-click="change-points" phx-value-points={value} class="cursor-pointer inline-flex items-center rounded-full bg-blue-100 px-3 py-0.5 text-sm font-medium text-blue-800 border hover:border-blue-400"><%= key %></span>
@@ -33,17 +36,34 @@
           <div class="">Players:</div>
           <div class="font-semibold"><%= @online_count %></div>
         </div>
+        
+        <div class=""></div>
         <div class="flex space-x-2">
           <button phx-click="show-votes"
-            class={"#{unless @username == "", do: "flex", else: "hidden"} items-center p-1.5 text-xs font-medium text-center text-white bg-blue-600 border border-transparent rounded-md shadow-sm lg:text-sm lg:px-2 lg:py-1 h-min hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"}>
+            class={"#{if @joined and !@reveal, do: "flex", else: "hidden"} items-center p-1.5 text-xs font-medium text-center text-white bg-blue-600 border border-transparent rounded-md shadow-sm lg:text-sm lg:px-2 lg:py-1 h-min hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"}>
             Show Votes
           </button>
           <button phx-click="clear-points"
-            class={"#{unless @username == "", do: "flex", else: "hidden"} items-center p-1.5 text-xs font-medium text-center text-white bg-blue-600 border border-transparent rounded-md shadow-sm lg:text-sm lg:px-2 lg:py-1 h-min hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"}>
-            Clear Votes
+            class={"#{if @joined and !@reveal, do: "flex", else: "hidden"} items-center p-1.5 text-xs font-medium text-center text-white bg-blue-600 border border-transparent rounded-md shadow-sm lg:text-sm lg:px-2 lg:py-1 h-min hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"}>
+            Clear All Votes
+          </button>
+          <button phx-click="clear-points"
+            class={"#{if @joined and @reveal, do: "flex", else: "hidden"} items-center p-1.5 text-xs font-medium text-center text-white bg-blue-600 border border-transparent rounded-md shadow-sm lg:text-sm lg:px-2 lg:py-1 h-min hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"}>
+            Reset Round
           </button>
         </div>
       </div>
+      <div class={"#{if @joined and @reveal, do: "hidden", else: "hidden"}"}>
+        <%= if @reveal do %>
+          <div class="flex space-x-1">
+            <div class="">Average Points:</div>
+            <div class=""><%= @avg_points %></div>
+          </div>
+        <% else %>
+          <div class="font-bold">Voting in progress...</div>
+        <% end %>
+      </div>
+  
     </div>
 
     <div class={"#{if @online_count == 0, do: "hidden", else: "flex"} flex-col mt-8"}>
@@ -63,7 +83,7 @@
                   <td class="py-4 pl-4 pr-3 text-sm font-medium text-gray-900 whitespace-nowrap sm:pl-6">
                     <div class="flex space-x-2">
                       <div>
-                        <%= if points == 0 do %>
+                        <%= if points == 0 or points == false do %>
                           <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         <% else %>
                           <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
