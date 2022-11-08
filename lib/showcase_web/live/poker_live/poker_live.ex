@@ -35,6 +35,13 @@ defmodule ShowcaseWeb.PokerLive do
 
   @impl true
   def handle_params(%{"room" => room}, _url, socket) do
+    # Presence.track(
+    #   self(),
+    #   room,
+    #   socket.id,
+    #   %{username: "", user_socket_id: socket.id, points: false, joined: false}
+    # )
+
     Phoenix.PubSub.subscribe(Showcase.PubSub, room)
 
     room_atom = room |> String.to_atom()
@@ -53,7 +60,9 @@ defmodule ShowcaseWeb.PokerLive do
       Presence.list(room)
       |> get_presence_participants()
 
-    reveal = Showcase.PokerRoomState.get_reveal(pid)
+    reveal =
+      Showcase.PokerRoomState.get_reveal(pid)
+      |> IO.inspect(label: "getting reveal!")
 
     {:noreply,
      socket
@@ -79,7 +88,7 @@ defmodule ShowcaseWeb.PokerLive do
       self(),
       room,
       socket_id,
-      %{username: username, user_socket_id: socket_id, points: false, reveal: false}
+      %{username: username, user_socket_id: socket_id, points: false, joined: true}
     )
 
     participants =
@@ -138,7 +147,8 @@ defmodule ShowcaseWeb.PokerLive do
       %{
         points: points,
         username: username,
-        user_socket_id: socket_id
+        user_socket_id: socket_id,
+        joined: true
       }
     )
 
@@ -213,7 +223,8 @@ defmodule ShowcaseWeb.PokerLive do
       %{
         points: false,
         username: username,
-        user_socket_id: socket_id
+        user_socket_id: socket_id,
+        joined: true
       }
     )
 
@@ -229,7 +240,7 @@ defmodule ShowcaseWeb.PokerLive do
      socket |> assign(participants: participants, points: false, reveal: reveal, avg_points: 0)}
   end
 
-  def handle_info(%{event: "presence_diff", topic: _msg_room}, %{assigns: %{room: room}} = socket) do
+  def handle_info(%{event: "presence_diff"}, %{assigns: %{room: room}} = socket) do
     participants =
       Presence.list(room)
       |> get_presence_participants()
@@ -252,10 +263,17 @@ defmodule ShowcaseWeb.PokerLive do
     |> Enum.sort_by(& &1.username, :asc)
   end
 
+  defp render_points(%{reveal: true, points: false} = assigns) do
+    ~H"""
+    <td class="px-3 py-4 text-right text-gray-800 whitespace-nowrap">No Vote</td>
+    """
+  end
+
   defp render_points(
-         %{points: points, user_socket_id: user_socket_id, socket_id: socket_id} = assigns
+         %{reveal: false, points: false, user_socket_id: user_socket_id, socket_id: socket_id} =
+           assigns
        )
-       when user_socket_id == socket_id and points == false do
+       when user_socket_id == socket_id do
     ~H"""
     <td class="px-3 py-4 text-right w-min">
       <div class="inline-block text-gray-600 bg-gray-600 rounded-lg">00</div>
@@ -264,17 +282,28 @@ defmodule ShowcaseWeb.PokerLive do
   end
 
   defp render_points(
-         %{points: points, user_socket_id: user_socket_id, socket_id: socket_id} = assigns
+         %{reveal: true, points: points, user_socket_id: user_socket_id, socket_id: socket_id} =
+           assigns
        )
-       when user_socket_id == socket_id and points != false do
+       when user_socket_id == socket_id do
     ~H"""
-    <td class="px-3 py-4 text-sm text-right text-gray-500 whitespace-nowrap"><%= points %></td>
+    <td class="px-3 py-4 text-right text-gray-500 whitespace-nowrap"><%= points %></td>
     """
   end
 
-  defp render_points(%{reveal: true, points: points} = assigns) do
+  defp render_points(
+         %{reveal: false, points: points, user_socket_id: user_socket_id, socket_id: socket_id} =
+           assigns
+       )
+       when user_socket_id == socket_id do
     ~H"""
-    <td class="px-3 py-4 text-sm text-right text-gray-500 whitespace-nowrap"><%= points %></td>
+    <td class="px-3 py-4 text-right text-gray-500 whitespace-nowrap"><%= points %></td>
+    """
+  end
+
+  defp render_points(%{reveal: true, points: points} = assigns) when points != false do
+    ~H"""
+    <td class="px-3 py-4 text-right text-gray-500 whitespace-nowrap"><%= points %></td>
     """
   end
 
@@ -286,49 +315,29 @@ defmodule ShowcaseWeb.PokerLive do
     """
   end
 
+  defp render_points(assigns) do
+    ~H"""
+    <td class="px-3 py-4 text-right w-min">
+      <div class="inline-block text-gray-600 bg-gray-600 rounded-lg">00</div>
+    </td>
+    """
+  end
+
   defp calculate_avg(participants) do
-    0
-
-    # participants |> IO.inspect(label: "participants!!")
-
-    # number_of_participants =
-    #   determine_valid_participants(participants)
-    #   |> IO.inspect(label: "number_of_participants!!")
-
-    # with {:ok, :enough_participants} <- enough_participants(number_of_participants),
-    #      sum_of_points = sum_participants_points(participants),
-    #      {:ok, avg} <- determine_average(number_of_participants, sum_of_points) do
-    #   avg
-    # else
-    #   {:error, :zero_participants} -> 0.0
-    # end
-
-    # participants_with_points =
-    #   participants
-    #   |> Enum.reject(&(&1 == false))
-
-    # sum =
-    #   participants_with_points
-    #   |> Enum.map(& &1.points)
-    #   |> Enum.sum()
-
-    # avg =
-    #   case sum do
-    #     0.0 -> 0.0
-    #     sum -> (sum / length(participants_with_points)) |> Float.round(1)
-    #   end
-
-    # if is_integer(avg) do
-    #   trunc(avg)
-    # else
-    #   avg
-    # end
+    with valid_participants = determine_valid_participants(participants),
+         number_of_participants = length(valid_participants),
+         {:ok, :enough_participants} <- enough_participants(number_of_participants),
+         sum_of_points = sum_participants_points(valid_participants),
+         {:ok, avg} <- determine_average(number_of_participants, sum_of_points) do
+      avg
+    else
+      {:error, :zero_participants} -> 0.0
+    end
   end
 
   defp determine_valid_participants(participants) do
     participants
     |> Enum.reject(&(&1.points == false))
-    |> length()
   end
 
   defp enough_participants(num_of_participants) when num_of_participants > 0 do
@@ -343,10 +352,12 @@ defmodule ShowcaseWeb.PokerLive do
     |> Enum.sum()
   end
 
-  defp determine_average(0.0, _), do: 0.0
-  defp determine_average(_, 0.0), do: 0.0
+  defp determine_average(0, _), do: {:ok, 0.0}
+  defp determine_average(_, 0.0), do: {:ok, 0.0}
 
   defp determine_average(number_of_participants, sum_of_points) do
-    (sum_of_points / number_of_participants) |> Float.round(1)
+    avg = (sum_of_points / number_of_participants) |> Float.round(1)
+
+    {:ok, avg}
   end
 end
