@@ -3,7 +3,7 @@ defmodule Showcase.PokerRoomState do
 
   def start_link(room) do
     {:ok, pid} = GenServer.start_link(__MODULE__, room, name: room)
-
+    IO.puts("Starting room: #{room}")
     {:ok, pid}
   end
 
@@ -19,9 +19,13 @@ defmodule Showcase.PokerRoomState do
     GenServer.call(name, :get_reveal)
   end
 
+  def terminate(name) do
+    GenServer.call(name, :terminate)
+  end
+
   @impl true
   def init(room) do
-    room |> IO.inspect(label: "roommmm")
+    Process.flag(:trap_exit, true)
     room = room |> Atom.to_string()
     Phoenix.PubSub.subscribe(Showcase.PubSub, room)
 
@@ -35,27 +39,15 @@ defmodule Showcase.PokerRoomState do
       )
       when msg_room == room do
     if joins |> Kernel.map_size() == 0 do
-      # TODO: close room!
-      # IO.puts("Closing room!")
-      # {:stop, :room_empty, %{state | reveal: false}}
-
-      {:noreply, %{state | reveal: false}}
+      # Closing due to empty room
+      {:stop, :normal, %{state | reveal: false}}
     else
       {:noreply, state}
     end
   end
 
-  def handle_info(
-        %{topic: msg_room, event: "presence_diff", payload: %{joins: joins}},
-        %{room: room} = state
-      ) do
-    msg_room |> IO.inspect(label: "msg_room!!")
-    room |> IO.inspect(label: "room!!")
-
-    {:noreply, state}
-  end
-
-  def handle_info(_, state) do
+  # Fallback for handling anything else and return state
+  def handle_info(_payload, state) do
     {:noreply, state}
   end
 
@@ -74,10 +66,30 @@ defmodule Showcase.PokerRoomState do
 
     {:reply, reveal, state}
   end
+
+  def handle_call(:terminate, _from, state) do
+    {:stop, :shutdown, state}
+  end
+
+  @impl true
+  def terminate(_reason, _state) do
+    IO.puts("Shutting down due to empty room")
+
+    {:shutdown, :empty_room}
+  end
 end
 
-# room = "5cc90d46-796c-4239-a82f-f498c3892da4"
+# room = "61ec9add-fe1b-4df0-930b-0bc1b8ba60c6"
 # room_atom = room |> String.to_atom()
 # pid = GenServer.whereis(room_atom)
+# {:ok, pid} = Showcase.PokerRoomState.start_link(room_atom)
 # Showcase.PokerRoomState.get_reveal(pid) |> IO.inspect(label: "Reveal:")
 # Showcase.Presence.list(room)
+
+# room = "abc"
+# room_atom = room |> String.to_atom()
+# pid = GenServer.whereis(room_atom)
+# {:ok, pid} = Showcase.PokerRoomState.start_link(room_atom)
+
+# Showcase.PokerRoomState.get_reveal(pid)
+# Showcase.PokerRoomState.terminate(pid)

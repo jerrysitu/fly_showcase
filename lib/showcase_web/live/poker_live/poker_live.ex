@@ -35,43 +35,34 @@ defmodule ShowcaseWeb.PokerLive do
 
   @impl true
   def handle_params(%{"room" => room}, _url, socket) do
-    # Presence.track(
-    #   self(),
-    #   room,
-    #   socket.id,
-    #   %{username: "", user_socket_id: socket.id, points: false, joined: false}
-    # )
+    Presence.track(
+      self(),
+      room,
+      socket.id,
+      %{username: "", user_socket_id: socket.id, points: false, joined: false}
+    )
 
     Phoenix.PubSub.subscribe(Showcase.PubSub, room)
 
     room_atom = room |> String.to_atom()
 
-    pid =
-      case GenServer.whereis(room_atom) do
-        nil ->
-          {:ok, pid} = Showcase.PokerRoomState.start_link(room_atom)
-          pid
+    if GenServer.whereis(room_atom) == nil,
+      do: Showcase.PokerRoomState.start_link(room_atom)
 
-        pid ->
-          pid
-      end
-
-    participants =
+    players =
       Presence.list(room)
-      |> get_presence_participants()
+      |> get_presence_players()
 
-    reveal =
-      Showcase.PokerRoomState.get_reveal(pid)
-      |> IO.inspect(label: "getting reveal!")
+    reveal = Showcase.PokerRoomState.get_reveal(String.to_atom(room))
 
     {:noreply,
      socket
      |> assign(
        room: room,
-       online_count: length(participants),
-       participants: participants,
-       pid: pid,
-       reveal: reveal
+       online_count: length(players),
+       players: players,
+       reveal: reveal,
+       joined: false
      )}
   end
 
@@ -82,37 +73,36 @@ defmodule ShowcaseWeb.PokerLive do
 
   @impl true
   def handle_event("join", %{"user" => %{"name" => username}}, socket) do
-    %{id: socket_id, assigns: %{room: room, participants: participants}} = socket
+    %{id: socket_id, assigns: %{room: room, players: players}} = socket
 
-    Presence.track(
+    Presence.update(
       self(),
       room,
       socket_id,
       %{username: username, user_socket_id: socket_id, points: false, joined: true}
     )
 
-    participants =
+    players =
       [
-        %{username: username, points: false, user_socket_id: socket_id} | participants
+        %{username: username, points: false, user_socket_id: socket_id, joined: true} | players
       ]
+      |> filter_joined()
       |> Enum.sort_by(& &1.username, :asc)
-
-    avg_points = calculate_avg(participants)
 
     {:noreply,
      socket
      |> assign(
        username: username,
-       participants: participants,
+       players: players,
        joined: true,
-       avg_points: avg_points
+       avg_points: calculate_avg(players)
      )}
   end
 
   def handle_event("clear-points", _, socket) do
-    %{assigns: %{room: room, pid: pid}} = socket
+    %{assigns: %{room: room}} = socket
 
-    Showcase.PokerRoomState.hide(pid)
+    Showcase.PokerRoomState.hide(String.to_atom(room))
 
     Phoenix.PubSub.broadcast(
       Showcase.PubSub,
@@ -123,8 +113,8 @@ defmodule ShowcaseWeb.PokerLive do
     {:noreply, socket |> assign(points: false, avg_points: 0)}
   end
 
-  def handle_event("show-votes", _, %{assigns: %{pid: pid, room: room}} = socket) do
-    Showcase.PokerRoomState.show(pid)
+  def handle_event("show-votes", _, %{assigns: %{room: room}} = socket) do
+    Showcase.PokerRoomState.show(String.to_atom(room))
 
     Phoenix.PubSub.broadcast(
       Showcase.PubSub,
@@ -160,7 +150,8 @@ defmodule ShowcaseWeb.PokerLive do
          room: room,
          points: points,
          username: username,
-         user_socket_id: socket_id
+         user_socket_id: socket_id,
+         joined: true
        }}
     )
 
@@ -171,24 +162,25 @@ defmodule ShowcaseWeb.PokerLive do
   def handle_info(
         {__MODULE__, :changed_points,
          %{user_socket_id: user_socket_id, points: points} = _payload},
-        %{id: socket_id, assigns: %{participants: participants}} = socket
+        %{id: socket_id, assigns: %{players: players}} = socket
       )
       when user_socket_id == socket_id do
-    participant_to_update =
-      participants
+    # TODO: This is ugly
+    player_to_update =
+      players
       |> Enum.find(&(&1.user_socket_id == user_socket_id))
       |> Map.put(:points, points)
 
-    participants =
-      participants
+    players =
+      players
       |> Enum.reject(&(&1.user_socket_id == user_socket_id))
       |> then(fn x ->
-        [participant_to_update, x]
-        |> List.flatten()
-        |> Enum.sort_by(& &1.username, :asc)
+        [player_to_update, x]
       end)
+      |> List.flatten()
+      |> Enum.sort_by(& &1.username, :asc)
 
-    {:noreply, socket |> assign(participants: participants)}
+    {:noreply, socket |> assign(players: players)}
   end
 
   def handle_info({__MODULE__, :changed_points, _payload}, socket),
@@ -196,14 +188,12 @@ defmodule ShowcaseWeb.PokerLive do
 
   def handle_info(
         {__MODULE__, :reveal_changed, _payload},
-        %{assigns: %{pid: pid, participants: participants}} = socket
+        %{assigns: %{players: players, room: room}} = socket
       ) do
-    reveal = Showcase.PokerRoomState.get_reveal(pid)
+    reveal = Showcase.PokerRoomState.get_reveal(String.to_atom(room))
 
     if reveal do
-      avg_points = calculate_avg(participants)
-
-      {:noreply, socket |> assign(reveal: true, avg_points: avg_points)}
+      {:noreply, socket |> assign(reveal: true, avg_points: calculate_avg(players))}
     else
       {:noreply, socket}
     end
@@ -213,7 +203,7 @@ defmodule ShowcaseWeb.PokerLive do
         {__MODULE__, :clear_points, _payload},
         %{
           id: socket_id,
-          assigns: %{room: room, username: username, participants: participants, pid: pid}
+          assigns: %{room: room, username: username, players: players, joined: joined}
         } = socket
       ) do
     Presence.update(
@@ -224,42 +214,44 @@ defmodule ShowcaseWeb.PokerLive do
         points: false,
         username: username,
         user_socket_id: socket_id,
-        joined: true
+        joined: joined
       }
     )
 
-    reveal = Showcase.PokerRoomState.get_reveal(pid)
+    reveal = Showcase.PokerRoomState.get_reveal(String.to_atom(room))
 
-    participants =
-      participants
-      |> Enum.map(fn participant ->
-        %{participant | points: false}
+    players =
+      players
+      |> Enum.map(fn player ->
+        %{player | points: false}
       end)
+      |> filter_joined()
+      |> Enum.sort_by(& &1.username, :asc)
 
-    {:noreply,
-     socket |> assign(participants: participants, points: false, reveal: reveal, avg_points: 0)}
+    {:noreply, socket |> assign(players: players, points: false, reveal: reveal, avg_points: 0)}
   end
 
   def handle_info(%{event: "presence_diff"}, %{assigns: %{room: room}} = socket) do
-    participants =
+    players =
       Presence.list(room)
-      |> get_presence_participants()
+      |> get_presence_players()
 
     {
       :noreply,
       socket
-      |> assign(online_count: length(participants), participants: participants)
+      |> assign(online_count: length(players), players: players)
     }
   end
 
   defp maybe_trunc(0.5), do: 0.5
   defp maybe_trunc(float), do: float |> trunc()
 
-  def get_presence_participants(presences) do
+  def get_presence_players(presences) do
     presences
     |> Enum.map(fn {_k, v} ->
       v[:metas] |> List.first()
     end)
+    |> filter_joined()
     |> Enum.sort_by(& &1.username, :asc)
   end
 
@@ -323,31 +315,32 @@ defmodule ShowcaseWeb.PokerLive do
     """
   end
 
-  defp calculate_avg(participants) do
-    with valid_participants = determine_valid_participants(participants),
-         number_of_participants = length(valid_participants),
-         {:ok, :enough_participants} <- enough_participants(number_of_participants),
-         sum_of_points = sum_participants_points(valid_participants),
-         {:ok, avg} <- determine_average(number_of_participants, sum_of_points) do
+  defp calculate_avg(players) do
+    # TODO: This is ugly
+    with valid_players = determine_valid_players(players),
+         number_of_players = length(valid_players),
+         {:ok, :enough_players} <- enough_players(number_of_players),
+         sum_of_points = sum_players_points(valid_players),
+         {:ok, avg} <- determine_average(number_of_players, sum_of_points) do
       avg
     else
-      {:error, :zero_participants} -> 0.0
+      {:error, :zero_players} -> 0.0
     end
   end
 
-  defp determine_valid_participants(participants) do
-    participants
+  defp determine_valid_players(players) do
+    players
     |> Enum.reject(&(&1.points == false))
   end
 
-  defp enough_participants(num_of_participants) when num_of_participants > 0 do
-    {:ok, :enough_participants}
+  defp enough_players(num_of_players) when num_of_players > 0 do
+    {:ok, :enough_players}
   end
 
-  defp enough_participants(_), do: {:error, :zero_participants}
+  defp enough_players(_), do: {:error, :zero_players}
 
-  defp sum_participants_points(participants) do
-    participants
+  defp sum_players_points(players) do
+    players
     |> Enum.map(& &1.points)
     |> Enum.sum()
   end
@@ -355,9 +348,11 @@ defmodule ShowcaseWeb.PokerLive do
   defp determine_average(0, _), do: {:ok, 0.0}
   defp determine_average(_, 0.0), do: {:ok, 0.0}
 
-  defp determine_average(number_of_participants, sum_of_points) do
-    avg = (sum_of_points / number_of_participants) |> Float.round(1)
+  defp determine_average(number_of_players, sum_of_points) do
+    avg = (sum_of_points / number_of_players) |> Float.round(1)
 
     {:ok, avg}
   end
+
+  defp filter_joined(players), do: players |> Enum.filter(& &1.joined)
 end
