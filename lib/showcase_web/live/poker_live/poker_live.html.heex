@@ -1,9 +1,5 @@
-<div class="max-w-2xl px-2 mx-auto">
-  <div class="text-2xl font-semibold text-center lg:text-4xl">Planning Poker</div>
-
-  <div class="">Username: <%= @username %></div>
-  <div class="">Reveal: <%= @reveal %></div>
-  <div class="">Joined: <%= @joined %></div>
+<div class="max-w-xl px-2 mx-auto">
+  <div class="text-2xl font-semibold text-center lg:text-3xl">Planning Poker</div>
 
   <div class={"#{unless @joined, do: "block", else: "hidden"} mt-6 bg-white shadow sm:rounded-lg"}>
     <div class="px-4 py-5 sm:p-6">
@@ -11,59 +7,55 @@
       <div class="max-w-xl mt-2 text-sm text-gray-500">
         <p>Set your name to join the planning poker session.</p>
       </div>
-      <form class="mt-5 sm:flex sm:items-center" phx-submit="join" phx-auto-recover="ignore">
+      <form class="mt-5 space-x-2 sm:flex sm:items-center" phx-submit="join" phx-auto-recover="ignore">
         <div class="w-full sm:max-w-xs">
           <label for="name" class="sr-only">Name</label>
           <%= text_input :user, :name, value: @username, required: true, data_lpignore: true, autocomplete: "off", placeholder: "Name", class: "block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
         </div>
-        <button type="submit" class="inline-flex items-center justify-center w-full px-4 py-2 mt-3 font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">Join</button>
+        <button type="submit" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">Join</button>
       </form>
     </div>
   </div>
 
 
   <div class="mt-6">
-    <div class={"#{if @joined and @reveal != true, do: "block", else: "hidden"} mt-4"}>
-      <div class="flex gap-x-2">
+    <div class={"#{if @joined and !@reveal, do: "block", else: "hidden"} mt-4 rounded-lg bg-white h-min shadow p-4"}>
+      <div class="flex flex-wrap sm:justify-between sm:flex-nowrap">
         <%= for {key, value} <- @possible_points do %>
-          <span phx-click="change-points" phx-value-points={value} class="cursor-pointer inline-flex items-center rounded-full bg-blue-100 px-3 py-0.5 text-sm font-medium text-blue-800 border hover:border-blue-400"><%= key %></span>
+          <span phx-click="change-points" phx-value-points={value} class="cursor-pointer inline-flex items-center rounded-full bg-blue-100 px-3 py-0.5 text-sm font-medium text-blue-800 border-2 border-white hover:shadow-md hover:border-blue-600"><%= key %></span>
         <% end %>
       </div>
     </div>
 
-    <div class="w-full col-span-2 p-4 mt-4 space-y-2 bg-white rounded-lg shadow lg:flex lg:flex-col h-min">
+    <div class="w-full col-span-2 p-4 mt-6 space-y-2 bg-white rounded-lg shadow lg:flex lg:flex-col h-min">
       <div class="flex justify-between">
         <div class="flex space-x-1">
           <div class="">Players:</div>
           <div class="font-semibold"><%= @online_count %></div>
         </div>
-        
-        <div class=""></div>
         <div class="flex space-x-2">
+          <button phx-click="clear-points"
+            class={"#{if @joined and !@reveal, do: "inline-flex", else: "hidden"} items-center rounded border border-transparent bg-blue-100 px-2.5 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"}>
+            Clear All Votes
+          </button>
           <button phx-click="show-votes"
-            class={"#{if @joined and !@reveal, do: "flex", else: "hidden"} items-center p-1.5 text-xs font-medium text-center text-white bg-blue-600 border border-transparent rounded-md shadow-sm lg:text-sm lg:px-2 lg:py-1 h-min hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"}>
+            class={"#{if @joined and !@reveal, do: "inline-flex", else: "hidden"} items-center rounded border border-transparent bg-blue-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"}>
             Show Votes
           </button>
           <button phx-click="clear-points"
-            class={"#{if @joined and !@reveal, do: "flex", else: "hidden"} items-center p-1.5 text-xs font-medium text-center text-white bg-blue-600 border border-transparent rounded-md shadow-sm lg:text-sm lg:px-2 lg:py-1 h-min hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"}>
-            Clear All Votes
-          </button>
-          <button phx-click="clear-points"
-            class={"#{if @joined and @reveal, do: "flex", else: "hidden"} items-center p-1.5 text-xs font-medium text-center text-white bg-blue-600 border border-transparent rounded-md shadow-sm lg:text-sm lg:px-2 lg:py-1 h-min hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"}>
+            class={"#{if @joined and @reveal, do: "inline-flex", else: "hidden"} items-center rounded border border-transparent bg-blue-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"}>
             Reset Round
           </button>
         </div>
       </div>
-      <div class={"#{if @joined and @reveal, do: "hidden", else: "hidden"}"}>
-        <%= if @reveal do %>
-          <div class="flex space-x-1">
-            <div class="">Average Points:</div>
-            <div class=""><%= @avg_points %></div>
-          </div>
-        <% else %>
-          <div class="font-bold">Voting in progress...</div>
-        <% end %>
-      </div>
+      <%= if @reveal do %>
+        <div class="flex space-x-1 font-semibold">
+          <div class="">Average Points:</div>
+          <div class=""><%= @avg_points %></div>
+        </div>
+      <% else %>
+        <div class="font-semibold">Voting in progress...</div>
+      <% end %>
   
     </div>
 
@@ -75,22 +67,26 @@
               <thead class="bg-gray-50">
                 <tr>
                   <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Player</th>
-                  <th scope="col" class="px-3 py-3.5 text-right text-sm font-semibold text-gray-900 w-min">Points</th>
+                  <th scope="col" class="py-3.5 px-4 text-right text-sm font-semibold text-gray-900 w-min">Points</th>
                 </tr>
               </thead>
               <tbody class="bg-white divide-y divide-gray-200">
                 <%= for %{username: username, points: points, user_socket_id: user_socket_id} <- filter_joined(@players) do %>
                 <tr>
-                  <td class="py-4 pl-4 pr-3 text-sm font-medium text-gray-900 whitespace-nowrap sm:pl-6">
+                  <td class="py-4 pl-4 pr-3 text-sm font-medium text-gray-800 whitespace-nowrap sm:pl-6">
                     <div class="flex space-x-2">
                       <div>
-                        <%= if points == 0 or points == false do %>
-                          <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <% else %>
+                        <%= if points do %>
                           <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <% else %>
+                          <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         <% end %>
                       </div>
-                      <div class=""><%= username %></div>
+                      <%= if user_socket_id == @socket.id do %>
+                        <div class="underline underline-offset-2 decoration-blue-500 decoration-2"><%= username %></div>
+                      <% else %>
+                        <div class=""><%= username %></div>
+                      <% end %>
                     </div>
                   </td>
                   <%= render_points(%{points: points, reveal: @reveal, user_socket_id: user_socket_id, socket_id: @socket.id}) %>
@@ -102,7 +98,11 @@
         </div>
       </div>
     </div>
+  </div>
 
-    
+  <div class="flex flex-col mt-4 text-xs text-gray-400">
+    <div class="">Username: <%= @username %></div>
+    <div class="">Reveal: <%= @reveal %></div>
+    <div class="">Joined: <%= @joined %></div>
   </div>
 </div>

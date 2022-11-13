@@ -257,7 +257,7 @@ defmodule ShowcaseWeb.PokerLive do
 
   defp render_points(%{reveal: true, points: false} = assigns) do
     ~H"""
-    <td class="px-3 py-4 text-right text-gray-800 whitespace-nowrap">No Vote</td>
+    <td class="px-4 py-4 text-right text-gray-600 whitespace-nowrap">No Vote</td>
     """
   end
 
@@ -267,8 +267,8 @@ defmodule ShowcaseWeb.PokerLive do
        )
        when user_socket_id == socket_id do
     ~H"""
-    <td class="px-3 py-4 text-right w-min">
-      <div class="inline-block text-gray-600 bg-gray-600 rounded-lg">00</div>
+    <td class="px-4 py-4 text-right w-min">
+      <div class="inline-block text-gray-600 bg-gray-600 rounded-lg select-none">##</div>
     </td>
     """
   end
@@ -279,7 +279,7 @@ defmodule ShowcaseWeb.PokerLive do
        )
        when user_socket_id == socket_id do
     ~H"""
-    <td class="px-3 py-4 text-right text-gray-500 whitespace-nowrap"><%= points %></td>
+    <td class="px-4 py-4 text-right text-gray-600 whitespace-nowrap"><%= points %></td>
     """
   end
 
@@ -289,28 +289,28 @@ defmodule ShowcaseWeb.PokerLive do
        )
        when user_socket_id == socket_id do
     ~H"""
-    <td class="px-3 py-4 text-right text-gray-500 whitespace-nowrap"><%= points %></td>
+    <td class="px-4 py-4 text-right text-gray-600 whitespace-nowrap"><%= points %></td>
     """
   end
 
   defp render_points(%{reveal: true, points: points} = assigns) when points != false do
     ~H"""
-    <td class="px-3 py-4 text-right text-gray-500 whitespace-nowrap"><%= points %></td>
+    <td class="px-4 py-4 text-right text-gray-600 whitespace-nowrap"><%= points %></td>
     """
   end
 
   defp render_points(%{reveal: false} = assigns) do
     ~H"""
-    <td class="px-3 py-4 text-right w-min">
-      <div class="inline-block text-gray-600 bg-gray-600 rounded-lg">00</div>
+    <td class="px-4 py-4 text-right w-min">
+      <div class="inline-block text-gray-600 bg-gray-600 rounded-lg select-none">##</div>
     </td>
     """
   end
 
   defp render_points(assigns) do
     ~H"""
-    <td class="px-3 py-4 text-right w-min">
-      <div class="inline-block text-gray-600 bg-gray-600 rounded-lg">00</div>
+    <td class="px-4 py-4 text-right w-min">
+      <div class="inline-block text-gray-600 bg-gray-600 rounded-lg select-none">##</div>
     </td>
     """
   end
@@ -321,7 +321,7 @@ defmodule ShowcaseWeb.PokerLive do
          number_of_players = length(valid_players),
          {:ok, :enough_players} <- enough_players(number_of_players),
          sum_of_points = sum_players_points(valid_players),
-         {:ok, avg} <- determine_average(number_of_players, sum_of_points) do
+         {:ok, avg} <- determine_average(sum_of_points, number_of_players) do
       avg
     else
       {:error, :zero_players} -> 0.0
@@ -345,11 +345,23 @@ defmodule ShowcaseWeb.PokerLive do
     |> Enum.sum()
   end
 
-  defp determine_average(0, _), do: {:ok, 0.0}
-  defp determine_average(_, 0.0), do: {:ok, 0.0}
+  defp determine_average(0.0, _), do: {:ok, 0.0}
+  defp determine_average(_, 0), do: {:ok, 0.0}
 
-  defp determine_average(number_of_players, sum_of_points) do
-    avg = (sum_of_points / number_of_players) |> Float.round(1)
+  defp determine_average(sum, players) do
+    rem =
+      try do
+        rem(sum, players)
+      rescue
+        ArithmeticError -> false
+      end
+
+    avg =
+      if rem == 0 do
+        (sum / players) |> trunc()
+      else
+        (sum / players) |> Float.round(1)
+      end
 
     {:ok, avg}
   end
