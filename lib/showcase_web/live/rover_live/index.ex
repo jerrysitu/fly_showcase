@@ -15,6 +15,7 @@ defmodule ShowcaseWeb.ShuttleLive do
      |> assign(current_position: "a1")
      |> assign(grid: grid)
      |> assign(events: ["Rover Started."])}
+    |> assign(page_title: "- Rover")
   end
 
   @impl true

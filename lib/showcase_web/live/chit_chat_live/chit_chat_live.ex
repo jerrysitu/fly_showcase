@@ -23,6 +23,7 @@ defmodule ShowcaseWeb.ChitChatLive do
       |> assign(online_users: [])
       |> assign(presence_events: [])
       |> assign(messages: [])
+      |> assign(page_title: "- Chit Chat")
     }
   end
 

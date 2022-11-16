@@ -4,7 +4,7 @@ defmodule ShowcaseWeb.PasswordGeneratorLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, socket |> assign(password_modules: [1])}
+    {:ok, socket |> assign(page_title: "- Password Gen") |> assign(password_modules: [1])}
   end
 
   @impl true

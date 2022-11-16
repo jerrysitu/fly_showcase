@@ -3,6 +3,8 @@ defmodule ShowcaseWeb.PokerLive do
 
   use ShowcaseWeb, :live_view
   alias Showcase.Presence
+  alias ShowcaseWeb.PokerLive.Components.PointedIcon
+  # alias Phoenix.LiveView.JS
 
   @possible_points [
     {"0", 0.0},
@@ -29,7 +31,8 @@ defmodule ShowcaseWeb.PokerLive do
        username: "",
        description: "",
        possible_points: @possible_points,
-       avg_points: 0
+       avg_points: 0,
+       page_title: "- Planning Poker"
      )}
   end
 
@@ -180,7 +183,10 @@ defmodule ShowcaseWeb.PokerLive do
       |> List.flatten()
       |> Enum.sort_by(& &1.username, :asc)
 
-    {:noreply, socket |> assign(players: players)}
+    {:noreply,
+     socket
+     |> assign(players: players)
+     |> push_event("changedPoints", %{"user_socket_id" => user_socket_id, "points" => points})}
   end
 
   def handle_info({__MODULE__, :changed_points, _payload}, socket),

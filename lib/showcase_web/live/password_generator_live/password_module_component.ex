@@ -50,7 +50,7 @@ defmodule ShowcaseWeb.PasswordGeneratorLive.PasswordModuleComponent do
           Copy Password
         </div>
         <div class="flex items-baseline ml-4 h-min"  x-data={"{ showCopied: #{@show_copied_url_button} }"}>
-          <div x-show="showCopied" phx-update="ignore" x-transition:enter="transition transform duration-300"
+          <div id={"copied-tag-#{@module_id}"} x-show="showCopied" phx-update="ignore" x-transition:enter="transition transform duration-300"
             x-transition:enter-start="opacity-0 scale-50" x-transition:enter-end="opacity-100 scale-100"
             x-transition:leave="transition transform duration-300" x-transition:leave-start="opacity-100 scale-100"
             x-transition:leave-end="opacity-0 scale-0" class="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 shadow">
@@ -59,7 +59,7 @@ defmodule ShowcaseWeb.PasswordGeneratorLive.PasswordModuleComponent do
         </div>
       </div>
 
-      <form phx-change="change-password-input" phx-target={@myself} phx-submit="generate-new-password" id={@module_id} phx-auto-recover="ignore">
+      <form phx-change="change-password-input" phx-target={@myself} phx-submit="generate-new-password" id={"form-#{@module_id}"} phx-auto-recover="ignore">
 
 
         <div class="grid w-full lg:grid-cols-2 lg:gap-x-4">

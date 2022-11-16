@@ -18,11 +18,11 @@
   </div>
 
 
-  <div class="mt-6">
+  <div class="mt-6" phx-hook="changedPoints" id="changedPoints">
     <div class={"#{if @joined and !@reveal, do: "block", else: "hidden"} mt-4 rounded-lg bg-white h-min shadow p-4"}>
       <div class="flex flex-wrap sm:justify-between sm:flex-nowrap">
         <%= for {key, value} <- @possible_points do %>
-          <span phx-click="change-points" phx-value-points={value} class="cursor-pointer inline-flex items-center rounded-full bg-blue-100 px-3 py-0.5 text-sm font-medium text-blue-800 border-2 border-white hover:shadow-md hover:border-blue-600"><%= key %></span>
+          <span phx-click="change-points" phx-value-points={value} class="cursor-pointer inline-flex items-center rounded-full bg-blue-100 px-3 py-0.5 text-sm font-medium text-blue-800 border-2 border-white hover:shadow-md hover:border-blue-600 transform hover:scale-110"><%= key %></span>
         <% end %>
       </div>
     </div>
@@ -54,7 +54,7 @@
           <div class=""><%= @avg_points %></div>
         </div>
       <% else %>
-        <div class="font-semibold">Voting in progress...</div>
+        <div class="">Voting in progress...</div>
       <% end %>
   
     </div>
@@ -75,13 +75,7 @@
                 <tr>
                   <td class="py-4 pl-4 pr-3 text-sm font-medium text-gray-800 whitespace-nowrap sm:pl-6">
                     <div class="flex space-x-2">
-                      <div>
-                        <%= if points do %>
-                          <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <% else %>
-                          <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <% end %>
-                      </div>
+                      <PointedIcon.icon points={points} user_socket_id={user_socket_id} />
                       <%= if user_socket_id == @socket.id do %>
                         <div class="underline underline-offset-2 decoration-blue-500 decoration-2"><%= username %></div>
                       <% else %>

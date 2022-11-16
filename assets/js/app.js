@@ -9,6 +9,20 @@ Alpine.start();
 
 let Hooks = {};
 
+Hooks.changedPoints = {
+  mounted() {
+    const changedPoints = ({
+      user_socket_id: user_socket_id,
+      points: points,
+    }) => {
+      console.log(user_socket_id, "user_socket_id!!!");
+      console.log(points, "points!!!");
+    };
+
+    this.handleEvent("changedPoints", changedPoints);
+  },
+};
+
 Hooks.copyPasswordToClipboard = {
   mounted() {
     this.el.addEventListener("click", (e) => {

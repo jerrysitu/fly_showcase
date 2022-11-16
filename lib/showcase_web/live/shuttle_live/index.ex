@@ -13,6 +13,7 @@ defmodule ShowcaseWeb.RoverLive do
      socket
      |> assign(current_position: {0, 0})
      |> assign(grid: grid)
+     |> assign(page_title: "- Rover")
      |> assign(events: [%{message: "Rover Started", type: :success}])}
   end
 
