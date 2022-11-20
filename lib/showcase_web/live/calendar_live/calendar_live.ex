@@ -6,8 +6,6 @@ defmodule ShowcaseWeb.CalendarLive do
 
   @impl true
   def mount(_params, session, socket) do
-    IO.inspect(label: "mounttt")
-
     user_timezone = Normalizer.get_timezone(socket, session)
     current_date = Timex.now() |> Timex.shift(hours: user_timezone)
     day_names = [7, 1, 2, 3, 4, 5, 6] |> Enum.map(&Timex.day_shortname/1)

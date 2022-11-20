@@ -36,13 +36,7 @@ defmodule ShowcaseWeb.CalendarDayComponent do
 
   @impl true
   def handle_event("pick-date", %{"date" => date}, socket) do
-    current_date = Timex.parse!(date, "{YYYY}-{0M}-{D}")
-
-    assigns = [
-      current_date: current_date
-    ]
-
-    {:noreply, assign(socket, assigns)}
+    {:noreply, socket}
   end
 
   defp today?(assigns) do
