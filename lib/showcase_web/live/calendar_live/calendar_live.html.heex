@@ -1,0 +1,46 @@
+<div class="">
+  <div class="">
+    <.link patch={Routes.calendar_path(@socket, :calendar)} replace={false}
+      class="inline-flex items-center px-3 py-2 text-sm font-medium leading-4 text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+      Current Date
+    </.link>
+  </div>
+
+  <div class="relative grid grid-cols-1 mt-2 gap-x-14 md:grid-cols-2">
+    <.link patch={Routes.calendar_path(@socket, :calendar, offset: @offset - 1)} replace={false}
+      class="absolute -top-1 -left-1.5 flex items-center justify-center p-1.5 text-gray-400 hover:text-gray-500">
+      <span class="sr-only">Previous month</span>
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z"></path>
+      </svg>
+    </.link>
+    <.link patch={Routes.calendar_path(@socket, :calendar, offset: @offset + 1)} replace={false}
+      class="absolute -top-1 -right-1.5 flex items-center justify-center p-1.5 text-gray-400 hover:text-gray-500">
+      <span class="sr-only">Next month</span>
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+      </svg>
+    </.link>
+    <%= for %{date: date, days: days} <- @month_tables do %>
+    <section class="text-center">
+      <h2 class="font-semibold text-gray-900"><%= Timex.format!(date, "%B %Y", :strftime) %></h2>
+      <div class="grid grid-cols-7 mt-6 text-xs leading-6 text-gray-500">
+        <div>S</div>
+        <div>M</div>
+        <div>T</div>
+        <div>W</div>
+        <div>T</div>
+        <div>F</div>
+        <div>S</div>
+      </div>
+      <div class="grid grid-cols-7 gap-px mt-2 text-sm bg-gray-200 rounded-lg shadow isolate ring-1 ring-gray-200">
+        <%= for day <- days do %>
+        <CalendarDayComponent.render day={day} current_date={date} />
+        <% end %>
+      </div>
+    </section>
+    <% end %>
+  </div>
+</div>
