@@ -10,12 +10,19 @@ defmodule ShowcaseWeb.RESTUserLookupLive.PaginationComponent do
         [_, page] = link |> String.split("&page=")
 
         ~H"""
-          <%= live_patch label, to: Routes.rest_user_lookup_path(socket, :rest_user_lookup, %{"username" => username, "page" => page}), class: "text-blue-500 underline" %>
+        <%= live_patch(label,
+          to:
+            Routes.rest_user_lookup_path(socket, :rest_user_lookup, %{
+              "username" => username,
+              "page" => page
+            }),
+          class: "text-blue-500 underline"
+        ) %>
         """
 
       _ ->
         ~H"""
-          <div class="text-gray-400"><%= label %></div>
+        <div class="text-gray-400"><%= label %></div>
         """
     end
   end
