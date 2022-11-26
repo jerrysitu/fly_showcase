@@ -8,7 +8,12 @@ defmodule ShowcaseWeb.CalendarDayComponent do
       today?(assigns) ->
         ~H"""
         <button type="button" class="relative bg-white py-1.5 text-gray-900 hover:bg-gray-100 focus:z-10">
-          <time phx-click="pick-date" phx-value-date={Timex.format!(@day, "%Y-%m-%d", :strftime)} datetime={Timex.format!(@day, "%Y-%m-%d", :strftime)} class="flex items-center justify-center mx-auto font-semibold text-white bg-indigo-600 rounded-full h-7 w-7">
+          <time
+            phx-click="pick-date"
+            phx-value-date={Timex.format!(@day, "%Y-%m-%d", :strftime)}
+            datetime={Timex.format!(@day, "%Y-%m-%d", :strftime)}
+            class="flex items-center justify-center mx-auto font-semibold text-white bg-indigo-600 rounded-full h-7 w-7"
+          >
             <%= Timex.format!(@day, "%d", :strftime) %>
           </time>
         </button>
@@ -17,7 +22,10 @@ defmodule ShowcaseWeb.CalendarDayComponent do
       other_month?(assigns) ->
         ~H"""
         <div class="relative bg-gray-50 py-1.5 text-gray-400 select-none">
-          <time datetime={Timex.format!(@day, "%Y-%m-%d", :strftime)} class="flex items-center justify-center mx-auto rounded-full h-7 w-7">
+          <time
+            datetime={Timex.format!(@day, "%Y-%m-%d", :strftime)}
+            class="flex items-center justify-center mx-auto rounded-full h-7 w-7"
+          >
             <%= Timex.format!(@day, "%d", :strftime) %>
           </time>
         </div>
@@ -26,7 +34,12 @@ defmodule ShowcaseWeb.CalendarDayComponent do
       true ->
         ~H"""
         <button type="button" class="relative bg-white py-1.5 text-gray-900 hover:bg-gray-100 focus:z-10">
-          <time phx-click="pick-date" phx-value-date={Timex.format!(@day, "%Y-%m-%d", :strftime)} datetime={Timex.format!(@day, "%Y-%m-%d", :strftime)} class="flex items-center justify-center mx-auto rounded-full h-7 w-7">
+          <time
+            phx-click="pick-date"
+            phx-value-date={Timex.format!(@day, "%Y-%m-%d", :strftime)}
+            datetime={Timex.format!(@day, "%Y-%m-%d", :strftime)}
+            class="flex items-center justify-center mx-auto rounded-full h-7 w-7"
+          >
             <%= Timex.format!(@day, "%d", :strftime) %>
           </time>
         </button>

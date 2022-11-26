@@ -28,6 +28,8 @@ defmodule ShowcaseWeb.ConnCase do
 
       # The default endpoint for testing
       @endpoint ShowcaseWeb.Endpoint
+
+      use ShowcaseWeb, :verified_routes
     end
   end
 

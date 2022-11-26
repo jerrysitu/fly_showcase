@@ -17,6 +17,8 @@ defmodule ShowcaseWeb do
   and import those modules here.
   """
 
+  def static_paths, do: ~w(assets fonts images favicon.ico robots.txt)
+
   def controller do
     quote do
       use Phoenix.Controller, namespace: ShowcaseWeb
@@ -24,6 +26,7 @@ defmodule ShowcaseWeb do
       import Plug.Conn
       import ShowcaseWeb.Gettext
       alias ShowcaseWeb.Router.Helpers, as: Routes
+      unquote(verified_routes())
     end
   end
 
@@ -89,6 +92,7 @@ defmodule ShowcaseWeb do
       import ShowcaseWeb.ErrorHelpers
       import ShowcaseWeb.Gettext
       alias ShowcaseWeb.Router.Helpers, as: Routes
+      unquote(verified_routes())
     end
   end
 
@@ -97,5 +101,14 @@ defmodule ShowcaseWeb do
   """
   defmacro __using__(which) when is_atom(which) do
     apply(__MODULE__, which, [])
+  end
+
+  def verified_routes do
+    quote do
+      use Phoenix.VerifiedRoutes,
+        endpoint: ShowcaseWeb.Endpoint,
+        router: ShowcaseWeb.Router,
+        statics: ShowcaseWeb.static_paths()
+    end
   end
 end
