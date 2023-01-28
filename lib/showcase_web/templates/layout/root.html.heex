@@ -43,27 +43,28 @@
             <%= link("Home",
               to: Routes.page_path(@conn, :index),
               class:
-                "py-6 text-xs lg:text-lg no-underline border-b-2  #{if Phoenix.Controller.current_path(@conn) == Routes.page_path(@conn, :index), do: "border-blue-500 text-gray-900 font-medium", else: "text-gray-500 border-white hover:text-blue-600"}"
+                "py-6 text-xs lg:text-lg no-underline border-b-2  #{if @conn.assigns.live_module == ShowcaseWeb.PageLive, do: "border-blue-500 text-gray-900 font-medium", else: "text-gray-500 border-white hover:text-blue-600"}"
             ) %>
+            <% @conn.assigns.live_module |> IO.inspect(label: "Conn", limit: :infinity) %>
             <%= link("Poker",
               to: Routes.poker_path(@conn, :poker),
               class:
-                "py-6 text-xs lg:text-lg no-underline border-b-2  #{if Phoenix.Controller.current_path(@conn) == Routes.poker_path(@conn, :poker), do: "border-blue-500 text-gray-900 font-medium", else: "text-gray-500 border-white hover:text-blue-600"}"
+                "py-6 text-xs lg:text-lg no-underline border-b-2  #{if @conn.assigns.live_module == ShowcaseWeb.PokerLive, do: "border-blue-500 text-gray-900 font-medium z-50", else: "text-gray-500 border-white hover:text-blue-600"}"
             ) %>
             <%= link("ChitChat",
               to: Routes.chit_chat_path(@conn, :chitchat),
               class:
-                "py-6 text-xs lg:text-lg no-underline border-b-2  #{if Phoenix.Controller.current_path(@conn) == Routes.chit_chat_path(@conn, :chitchat), do: "border-blue-500 text-gray-900 font-medium", else: "text-gray-500 border-white hover:text-blue-600"}"
+                "py-6 text-xs lg:text-lg no-underline border-b-2  #{if @conn.assigns.live_module == ShowcaseWeb.ChitChatLive, do: "border-blue-500 text-gray-900 font-medium", else: "text-gray-500 border-white hover:text-blue-600"}"
             ) %>
             <%= link("Password Gen",
               to: Routes.password_generator_path(@conn, :index),
               class:
-                "py-6 text-xs lg:text-lg no-underline border-b-2  #{if Phoenix.Controller.current_path(@conn) == Routes.password_generator_path(@conn, :index), do: "border-blue-500 text-gray-900 font-medium", else: "text-gray-500 border-white hover:text-blue-600"}"
+                "py-6 text-xs lg:text-lg no-underline border-b-2  #{if @conn.assigns.live_module == ShowcaseWeb.PasswordGeneratorLive, do: "border-blue-500 text-gray-900 font-medium", else: "text-gray-500 border-white hover:text-blue-600"}"
             ) %>
             <%= link("Rover",
               to: Routes.rover_path(@conn, :rover),
               class:
-                "py-6 text-xs lg:text-lg no-underline border-b-2  #{if Phoenix.Controller.current_path(@conn) == Routes.rover_path(@conn, :rover), do: "border-blue-500 text-gray-900 font-medium", else: "text-gray-500 border-white hover:text-blue-600"}"
+                "py-6 text-xs lg:text-lg no-underline border-b-2  #{if @conn.assigns.live_module == ShowcaseWeb.RoverLive, do: "border-blue-500 text-gray-900 font-medium", else: "text-gray-500 border-white hover:text-blue-600"}"
             ) %>
             <div class="relative" x-data="{ open: false }">
               <div class="">
