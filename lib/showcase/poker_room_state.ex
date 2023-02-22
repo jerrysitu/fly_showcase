@@ -1,6 +1,8 @@
 defmodule Showcase.PokerRoomState do
   use GenServer
 
+  alias Showcase.Presence
+
   def start_link(room) do
     {:ok, pid} = GenServer.start_link(__MODULE__, room, name: room)
     IO.puts("Starting room: #{room}")
@@ -34,11 +36,11 @@ defmodule Showcase.PokerRoomState do
 
   @impl true
   def handle_info(
-        %{topic: msg_room, event: "presence_diff", payload: %{joins: joins}},
+        %{topic: msg_room, event: "presence_diff", payload: _payload},
         %{room: room} = state
       )
       when msg_room == room do
-    if joins |> Kernel.map_size() == 0 do
+    if Presence.list(room) |> Kernel.map_size() == 0 do
       # Closing due to empty room
       {:stop, :normal, %{state | reveal: false}}
     else
@@ -78,18 +80,3 @@ defmodule Showcase.PokerRoomState do
     {:shutdown, :empty_room}
   end
 end
-
-# room = "61ec9add-fe1b-4df0-930b-0bc1b8ba60c6"
-# room_atom = room |> String.to_atom()
-# pid = GenServer.whereis(room_atom)
-# {:ok, pid} = Showcase.PokerRoomState.start_link(room_atom)
-# Showcase.PokerRoomState.get_reveal(pid) |> IO.inspect(label: "Reveal:")
-# Showcase.Presence.list(room)
-
-# room = "abc"
-# room_atom = room |> String.to_atom()
-# pid = GenServer.whereis(room_atom)
-# {:ok, pid} = Showcase.PokerRoomState.start_link(room_atom)
-
-# Showcase.PokerRoomState.get_reveal(pid)
-# Showcase.PokerRoomState.terminate(pid)
