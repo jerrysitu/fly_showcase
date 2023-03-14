@@ -4,9 +4,10 @@ defmodule ShowcaseWeb.PokerLive do
   use ShowcaseWeb, :live_view
   alias Showcase.Presence
   alias ShowcaseWeb.PokerLive.Components.PointedIcon
-  # alias Phoenix.LiveView.JS
+  alias Phoenix.LiveView.JS
 
   @possible_points [
+    {"?", "obstain"},
     {"0", 0.0},
     {"0.5", 0.5},
     {"1", 1.0},
@@ -90,6 +91,7 @@ defmodule ShowcaseWeb.PokerLive do
         %{username: username, points: false, user_socket_id: socket_id, joined: true} | players
       ]
       |> filter_joined()
+      |> Enum.filter(&(&1.points != "obstain"))
       |> Enum.sort_by(& &1.username, :asc)
 
     {:noreply,
@@ -126,6 +128,39 @@ defmodule ShowcaseWeb.PokerLive do
     )
 
     {:noreply, socket |> assign(reveal: true)}
+  end
+
+  def handle_event("change-points", %{"points" => "obstain"}, socket) do
+    %{id: socket_id, assigns: %{room: room, username: username}} = socket
+
+    points = "obstain"
+
+    Presence.update(
+      self(),
+      room,
+      socket_id,
+      %{
+        points: points,
+        username: username,
+        user_socket_id: socket_id,
+        joined: true
+      }
+    )
+
+    Phoenix.PubSub.broadcast(
+      Showcase.PubSub,
+      room,
+      {__MODULE__, :changed_points,
+       %{
+         room: room,
+         points: points,
+         username: username,
+         user_socket_id: socket_id,
+         joined: true
+       }}
+    )
+
+    {:noreply, socket |> assign(points: points)}
   end
 
   def handle_event("change-points", %{"points" => points}, socket) do
@@ -336,6 +371,7 @@ defmodule ShowcaseWeb.PokerLive do
 
   defp determine_valid_players(players) do
     players
+    |> Enum.reject(&(&1.points == "obstain"))
     |> Enum.reject(&(&1.points == false))
   end
 
